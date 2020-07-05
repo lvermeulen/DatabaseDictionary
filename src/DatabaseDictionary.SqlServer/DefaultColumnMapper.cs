@@ -16,8 +16,8 @@ namespace DatabaseDictionary.SqlServer
 
 		private List<string> GetColumnNames(IDbConnection connection, string table, string schema = null)
 		{
-			string withSchema = $"and schema_name = '{schema}'";
-			string sql = $"select COLUMN_NAME_ALREADY from information_schema.columns where table_name = '{table} {withSchema}' order by COLUMN_ORDER_ALREADY";
+			string withSchema = $"and table_schema = '[{schema}]'";
+			string sql = $"select column_name from information_schema.columns where table_name = '[{table}]' {withSchema} order by ordinal_position";
 
 			return connection.Query<string>(sql).ToList();
 		}

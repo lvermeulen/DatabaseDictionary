@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -9,12 +8,8 @@ namespace DatabaseDictionary.SqlServer
 {
 	public class SqlServerReadonlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
 	{
-		private readonly IDbConnection _connection;
-		private readonly string _table;
-		private readonly string _schema;
-		private readonly string _keyColumn;
-		private readonly string _valueColumn;
-		private readonly SqlServerAdapter _adapter;
+		protected readonly SqlServerAdapter Adapter;
+		protected Dictionary<TKey, TValue> Dictionary;
 
 		public SqlServerReadonlyDictionary(string connectionString, string table, string schema = null, IColumnMapper columnMapper = null)
 			: this(new SqlConnection(connectionString), table, schema, columnMapper)
@@ -22,26 +17,27 @@ namespace DatabaseDictionary.SqlServer
 
 		public SqlServerReadonlyDictionary(IDbConnection connection, string table, string schema = null, IColumnMapper columnMapper = null)
 		{
-			_connection = connection;
-			_table = table;
-			_schema = schema;
-
 			if (columnMapper == null)
 			{
 				columnMapper = new DefaultColumnMapper(connection, table, schema);
 			}
 
-			_keyColumn = columnMapper.GetKeyColumnName();
-			_valueColumn = columnMapper.GetValueColumnName();
-			_adapter = new SqlServerAdapter(_connection, _keyColumn, _valueColumn, _table, _schema);
+			string keyColumn = columnMapper.GetKeyColumnName();
+			string valueColumn = columnMapper.GetValueColumnName();
+			Adapter = new SqlServerAdapter(connection, keyColumn, valueColumn, table, schema);
+			Read();
+		}
 
-			Keys = new List<TKey>();
-			Values = new List<TValue>();
+		private void Read()
+		{
+			Dictionary = Adapter.ReadAllRows<TKey, TValue>()
+				.ToDictionary(x => x.Item1, x => x.Item2);
 		}
 
 		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
 		{
-			return _adapter.GetAllRows<TKey, TValue>();
+			Read();
+			return Dictionary.GetEnumerator();
 		}
 
 		IEnumerator IEnumerable.GetEnumerator()
@@ -49,31 +45,37 @@ namespace DatabaseDictionary.SqlServer
 			return GetEnumerator();
 		}
 
-		public int Count { get; }
+		public int Count
+		{
+			get
+			{
+				Read();
+				return Dictionary.Count;
+			}
+		}
 
 		public bool ContainsKey(TKey key)
 		{
-			var results = _adapter.GetAllRows<TKey, TValue>();
-			return results.Any(x => x.Item1.Equals(key));
+			Read();
+			return Dictionary.ContainsKey(key);
 		}
 
 		public bool TryGetValue(TKey key, out TValue value)
 		{
-			var results = _adapter.GetAllRows<TKey, TValue>();
-			var result = results.FirstOrDefault(x => x.Item1.Equals(key));
-			if (result.CompareTo() is default)
-			{
-				value = default;
-				return true;
-			}
-
-			value = default;
-			return false;
+			Read();
+			return Dictionary.TryGetValue(key, out value);
 		}
 
-		public TValue this[TKey key] => throw new NotImplementedException();
+		public TValue this[TKey key]
+		{
+			get
+			{
+				Read();
+				return Dictionary[key];
+			}
+		}
 
-		public IEnumerable<TKey> Keys { get; }
-		public IEnumerable<TValue> Values { get; }
+		public IEnumerable<TKey> Keys => Dictionary.Keys;
+		public IEnumerable<TValue> Values => Dictionary.Values;
 	}
 }
