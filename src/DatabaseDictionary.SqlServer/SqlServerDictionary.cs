@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace DatabaseDictionary.SqlServer
 {
-	public class SqlServerDictionary<TKey, TValue> : SqlServerReadonlyDictionary<TKey, TValue>, IDictionary<TKey, TValue>
+	public class SqlServerDictionary<TKey, TValue> : SqlServerReadOnlyDictionary<TKey, TValue>, IDictionary<TKey, TValue>
 	{
 		public SqlServerDictionary(string connectionString, string table, string schema = null)
 			: base(connectionString, table, schema)

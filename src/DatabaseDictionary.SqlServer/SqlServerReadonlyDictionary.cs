@@ -6,16 +6,16 @@ using Microsoft.Data.SqlClient;
 
 namespace DatabaseDictionary.SqlServer
 {
-	public class SqlServerReadonlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
+	public class SqlServerReadOnlyDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
 	{
 		protected readonly SqlServerAdapter Adapter;
 		protected Dictionary<TKey, TValue> Dictionary;
 
-		public SqlServerReadonlyDictionary(string connectionString, string table, string schema = null, IColumnMapper columnMapper = null)
+		public SqlServerReadOnlyDictionary(string connectionString, string table, string schema = null, IColumnMapper columnMapper = null)
 			: this(new SqlConnection(connectionString), table, schema, columnMapper)
 		{ }
 
-		public SqlServerReadonlyDictionary(IDbConnection connection, string table, string schema = null, IColumnMapper columnMapper = null)
+		public SqlServerReadOnlyDictionary(IDbConnection connection, string table, string schema = null, IColumnMapper columnMapper = null)
 		{
 			if (columnMapper == null)
 			{
