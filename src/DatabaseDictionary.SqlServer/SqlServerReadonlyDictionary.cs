@@ -10,6 +10,7 @@ namespace DatabaseDictionary.SqlServer
 	{
 		protected readonly SqlServerAdapter Adapter;
 		protected Dictionary<TKey, TValue> Dictionary;
+		protected bool IsModified;
 
 		public SqlServerReadOnlyDictionary(string connectionString, string table, string schema = null, IColumnMapper columnMapper = null)
 			: this(new SqlConnection(connectionString), table, schema, columnMapper)
@@ -25,13 +26,18 @@ namespace DatabaseDictionary.SqlServer
 			string keyColumn = columnMapper.GetKeyColumnName();
 			string valueColumn = columnMapper.GetValueColumnName();
 			Adapter = new SqlServerAdapter(connection, keyColumn, valueColumn, table, schema);
+			IsModified = true;
 			Read();
 		}
 
 		private void Read()
 		{
-			Dictionary = Adapter.ReadAllRows<TKey, TValue>()
-				.ToDictionary(x => x.Item1, x => x.Item2);
+			if (IsModified)
+			{
+				Dictionary = Adapter.ReadAllRows<TKey, TValue>()
+					.ToDictionary(x => x.Item1, x => x.Item2);
+				IsModified = false;
+			}
 		}
 
 		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()

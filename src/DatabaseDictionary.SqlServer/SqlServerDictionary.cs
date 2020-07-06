@@ -8,17 +8,18 @@ namespace DatabaseDictionary.SqlServer
 {
 	public class SqlServerDictionary<TKey, TValue> : SqlServerReadOnlyDictionary<TKey, TValue>, IDictionary<TKey, TValue>
 	{
-		public SqlServerDictionary(string connectionString, string table, string schema = null)
-			: base(connectionString, table, schema)
+		public SqlServerDictionary(string connectionString, string table, string schema = null, IColumnMapper columnMapper = null)
+			: base(connectionString, table, schema, columnMapper)
 		{ }
 
-		public SqlServerDictionary(IDbConnection connection, string table, string schema = null)
-			: base(connection, table, schema)
+		public SqlServerDictionary(IDbConnection connection, string table, string schema = null, IColumnMapper columnMapper = null)
+			: base(connection, table, schema, columnMapper)
 		{ }
 
 		private void Write()
 		{
 			Adapter.WriteAllRows(Dictionary);
+			IsModified = true;
 		}
 
 		public void Add(KeyValuePair<TKey, TValue> item)
